@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="EnthusiaTrackRandomizer.vcxproj" />
+  <Project Path="EnthusiaTrackRandomizer.vcxproj" Id="6aa8dbff-6114-4b4e-b59d-1c6d98ac87c0" />
 </Solution>
