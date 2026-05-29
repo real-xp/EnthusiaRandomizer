@@ -96,7 +96,7 @@ const char* TRACK_NAMES[64] = {
     "WILD WEST ENDURO REVERSE (NO LIGHTING)",
 };
 
-const int TRACK_ID[64] = {
+const uint8_t TRACK_ID[64] = {
     1,   // AUTUMN HILL FORWARD
     2,   // AUTUMN MOUNTAIN FORWARD
     3,   // VICTORIA GARDEN FORWARD
@@ -172,13 +172,15 @@ static ImGuiTextFilter track_filter;
 const int TRACK_ADDRESS_EL = 0x01ab7c44;
 const int TRACK_ADDRESS_OTHER = 0x01af7be4;
 
+const int LAPS_ADDRESS_EL = 0x01ab7c50;
+
 // PROCATTACH BEGINS HERE
 
 uintptr_t eeMemBase = 0;
 HANDLE hProc;
 
 
-DWORD GetProcIDByName(const std::wstring procName) {
+static DWORD GetProcIDByName(const std::wstring procName) {
     DWORD prodID = 0; // init proc id
 
 
@@ -199,19 +201,70 @@ DWORD GetProcIDByName(const std::wstring procName) {
     return prodID;
 }
 
-static void SelectTrackAndAssignValue(bool* start_loading_phase, bool* show_popup_success, bool* show_popup_fail) {
+static void SelectTrackAndLapsAndAssignValue(bool* start_loading_phase, bool* show_popup_success, bool* show_popup_fail) {
     *start_loading_phase = true;
     bool do1 = false;
     bool do2 = false;
-    ULONGLONG startTime = GetTickCount64();
+    bool do3 = false;
+    uint8_t number_of_laps_interal = (uint8_t) number_of_laps;
+    ULONGLONG start_time = GetTickCount64();
+
+    uintptr_t ingame_track_address_el = eeMemBase + TRACK_ADDRESS_EL;
+    uintptr_t ingame_track_address_other = eeMemBase + TRACK_ADDRESS_OTHER;
+    uintptr_t ingame_laps_address_el = eeMemBase + LAPS_ADDRESS_EL;
+
+    while (GetTickCount64() - start_time < 30000) {
+
+        do1 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_el, &TRACK_ID[selected_track_index], sizeof(TRACK_ID[selected_track_index]), nullptr);
+        do2 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_other, &TRACK_ID[selected_track_index], sizeof(TRACK_ID[selected_track_index]), nullptr);
+
+        if (number_of_laps_interal != 0) {
+            do3 = WriteProcessMemory(hProc, (LPVOID)ingame_laps_address_el, &number_of_laps_interal, sizeof(number_of_laps_interal), nullptr);
+        }
+        else {
+            do3 = true;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    if (do1 && do2 && do3) {
+        std::cout << "SUCCESS" << std::endl;
+        *start_loading_phase = false;
+        *show_popup_success = true;
+    }
+    else {
+        std::cout << "FAILURE" << std::endl;
+        *start_loading_phase = false;
+        *show_popup_fail = true;
+    }
+}
+
+static void RandomizeAndSelectTrackAndAssignValue(bool* start_loading_phase, bool* show_popup_success, bool* show_popup_fail) {
+    *start_loading_phase = true;
+    bool do1 = false;
+    bool do2 = false;
 
     uintptr_t ingame_track_address_el = eeMemBase + TRACK_ADDRESS_EL;
     uintptr_t ingame_track_address_other = eeMemBase + TRACK_ADDRESS_OTHER;
 
-    while (GetTickCount64() - startTime < 30000) {
+    uint8_t rand_track_id_val = (uint8_t) 1; // fallback value
 
-        do1 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_el, &TRACK_ID[selected_track_index], sizeof(TRACK_ID[selected_track_index]), nullptr);
-        do2 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_other, &TRACK_ID[selected_track_index], sizeof(TRACK_ID[selected_track_index]), nullptr);
+    for (size_t i = 0; i < 6; i++) // basically so mirage occurs less in 6 tries
+    {
+        std::srand((int)std::time(NULL));
+        rand_track_id_val = (uint8_t)std::rand() % 64;
+
+        if (!(rand_track_id_val >= 30 && rand_track_id_val <= 46)) {
+            break;
+        }
+    }
+
+    ULONGLONG start_time = GetTickCount64();
+
+    while (GetTickCount64() - start_time < 30000) {
+
+        do1 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_el, &rand_track_id_val, sizeof(rand_track_id_val), nullptr);
+        do2 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_other, &rand_track_id_val, sizeof(rand_track_id_val), nullptr);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
@@ -227,37 +280,7 @@ static void SelectTrackAndAssignValue(bool* start_loading_phase, bool* show_popu
     }
 }
 
-//static void SelectLapsAndAssignVariable(bool* start_loading_phase, bool* show_popup_success, bool* show_popup_fail) {
-//    *start_loading_phase = true;
-//    bool do1 = false;
-//    bool do2 = false;
-//    ULONGLONG startTime = GetTickCount64();
-//
-//    uintptr_t ingame_laps_address_el = eeMemBase + LAPS_ADDRESS_EL;
-//    uintptr_t ingame_laps_address_other = eeMemBase + LAPS_ADDRESS_OTHER;
-//
-//    while (GetTickCount64() - startTime < 10000) {
-//
-//
-//        do1 = WriteProcessMemory(hProc, (LPVOID)ingame_laps_address_el, &number_of_laps, sizeof(number_of_laps), nullptr);
-//        do2 = WriteProcessMemory(hProc, (LPVOID)ingame_laps_address_other, &number_of_laps, sizeof(number_of_laps), nullptr);
-//
-//        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-//    }
-//
-//    if (do1 && do2) {
-//        std::cout << "SUCCESS" << std::endl;
-//        *start_loading_phase = false;
-//        *show_popup_success = true;
-//    }
-//    else {
-//        std::cout << "FAILURE" << std::endl;
-//        *start_loading_phase = false;
-//        *show_popup_fail = true;
-//    }
-//}
-
-int ProcAttach() {
+static int ProcAttach() {
 
     // ACTUALLY GETTING ALL PATH AND STUFF
 
@@ -468,14 +491,19 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
         
         ShowAttachPopup(&show_attached_popup, attached);
 
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, show_button_loading_icon);
         ImGui::Dummy(ImVec2(0, 20));
-        ImGui::PushFont(NULL, 42);
+        ImGui::PushFont(NULL, 39);
         ImGui::Text("Enthusia Randomizer", ImGui::GetFontSize());
         ImGui::PopFont();
         ImGui::Dummy(ImVec2(0, 20));
 
         // MANUAL SELECT TRACK
-        if (ImGui::BeginCombo("Select Track##SelectTrack", track_name_selected, 0))
+
+        ImGui::Text("Select Track");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(-FLT_MIN);
+        if (ImGui::BeginCombo("##SelectTrack", track_name_selected, 0))
         {
 
             if (ImGui::IsWindowAppearing())
@@ -502,11 +530,40 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
             }
             ImGui::EndCombo();
         }
+        ImGui::Text("Select Laps ");
         ImGui::SameLine();
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, show_button_loading_icon);
-        if (ImGui::Button(show_button_loading_icon ? "Working...##Track" : "Set##Track", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+        ImGui::SetNextItemWidth(-FLT_MIN);
+        ImGui::SliderInt("##SelectLaps", &number_of_laps, 0, 200, "%d", 0);
+
+        ImGui::Dummy(ImVec2(0, 10));
+
+        if (ImGui::Button(show_button_loading_icon ? "Working...##Track" : "Set Track And Laps##Track", ImVec2(ImGui::GetContentRegionAvail().x, 25))) {
             if (attached == 1) {
-                std::jthread(SelectTrackAndAssignValue, &show_button_loading_icon, &show_memory_write_success_popup, &show_memory_write_fail_popup).detach();
+                std::jthread(SelectTrackAndLapsAndAssignValue, &show_button_loading_icon, &show_memory_write_success_popup, &show_memory_write_fail_popup).detach();
+            }
+            else {
+                show_cant_use_popup = true;
+            }
+        }
+
+        ShowMemorySetPopup(&show_memory_write_success_popup, &show_memory_write_fail_popup);
+        ShowNoAttachProcPopup(&show_cant_use_popup);
+
+        ImGui::Dummy(ImVec2(0, 9));
+
+
+        ImGui::Button("Instant Win##InstantWin", ImVec2(io.DisplaySize.x / 4, 25));
+        ImGui::SameLine();
+        ImGui::Button("Debug Car##DebugCar", ImVec2(io.DisplaySize.x / 4, 25));
+        ImGui::SameLine();
+        ImGui::Button("AIRS##AIRS", ImVec2(io.DisplaySize.x / 4, 25));
+        ImGui::SameLine();
+        ImGui::Button("Player Car##PlayerCar", ImVec2(ImGui::GetContentRegionAvail().x, 25));
+
+        ImGui::Dummy(ImVec2(0, 9));
+        if (ImGui::Button("Randomize Track##TrackRandom", ImVec2(ImGui::GetContentRegionAvail().x, 50))) {
+            if (attached == 1) {
+                std::jthread(RandomizeAndSelectTrackAndAssignValue, &show_button_loading_icon, &show_memory_write_success_popup, &show_memory_write_fail_popup).detach();
             }
             else {
                 show_cant_use_popup = true;
@@ -514,13 +571,6 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
         }
         ImGui::PopItemFlag();
 
-        ShowMemorySetPopup(&show_memory_write_success_popup, &show_memory_write_fail_popup);
-        ShowNoAttachProcPopup(&show_cant_use_popup);
-
-        ImGui::Dummy(ImVec2(0, 20));
-        ImGui::Button("Randomize Track##TrackRandom", ImVec2(ImGui::GetContentRegionAvail().x, 50));
-        //ImGui::SameLine();
-        //ImGui::Button("Randomize Laps (1 to 10)##TrackRandom", ImVec2(ImGui::GetContentRegionAvail().x, 50));
 
         ImGui::End();
         ImGui::Render();
