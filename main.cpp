@@ -215,7 +215,7 @@ static void SelectTrackAndLapsAndAssignValue(bool* start_loading_phase, bool* sh
     uintptr_t ingame_laps_address_el = eeMemBase + LAPS_ADDRESS_EL;
     uintptr_t ingame_laps_address_other = eeMemBase + LAPS_ADDRESS_OTHER;
 
-    while (GetTickCount64() - startTime < 10000) {
+    while (GetTickCount64() - startTime < 20000) {
 
         do1 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_el, &TRACK_ID[selected_track_index], sizeof(TRACK_ID[selected_track_index]), nullptr);
         do2 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_other, &TRACK_ID[selected_track_index], sizeof(TRACK_ID[selected_track_index]), nullptr);
@@ -229,7 +229,7 @@ static void SelectTrackAndLapsAndAssignValue(bool* start_loading_phase, bool* sh
             do4 = true;
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     if (do1 && do2 && do3 && do4) {
         std::cout << "SUCCESS" << std::endl;
