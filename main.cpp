@@ -172,9 +172,6 @@ static ImGuiTextFilter track_filter;
 const int TRACK_ADDRESS_EL = 0x01ab7c44;
 const int TRACK_ADDRESS_OTHER = 0x01af7be4;
 
-const int LAPS_ADDRESS_EL = 0x01ab7c50;
-const int LAPS_ADDRESS_OTHER = 0x01af7bf0;
-
 // PROCATTACH BEGINS HERE
 
 uintptr_t eeMemBase = 0;
@@ -202,36 +199,23 @@ DWORD GetProcIDByName(const std::wstring procName) {
     return prodID;
 }
 
-static void SelectTrackAndLapsAndAssignValue(bool* start_loading_phase, bool* show_popup_success, bool* show_popup_fail) {
+static void SelectTrackAndAssignValue(bool* start_loading_phase, bool* show_popup_success, bool* show_popup_fail) {
     *start_loading_phase = true;
     bool do1 = false;
     bool do2 = false;
-    bool do3 = false;
-    bool do4 = false;
     ULONGLONG startTime = GetTickCount64();
 
     uintptr_t ingame_track_address_el = eeMemBase + TRACK_ADDRESS_EL;
     uintptr_t ingame_track_address_other = eeMemBase + TRACK_ADDRESS_OTHER;
-    uintptr_t ingame_laps_address_el = eeMemBase + LAPS_ADDRESS_EL;
-    uintptr_t ingame_laps_address_other = eeMemBase + LAPS_ADDRESS_OTHER;
 
-    while (GetTickCount64() - startTime < 20000) {
+    while (GetTickCount64() - startTime < 30000) {
 
         do1 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_el, &TRACK_ID[selected_track_index], sizeof(TRACK_ID[selected_track_index]), nullptr);
         do2 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_other, &TRACK_ID[selected_track_index], sizeof(TRACK_ID[selected_track_index]), nullptr);
 
-        if (number_of_laps != 0) {
-            do3 = WriteProcessMemory(hProc, (LPVOID)ingame_laps_address_el, &number_of_laps, sizeof(number_of_laps), nullptr);
-            do4 = WriteProcessMemory(hProc, (LPVOID)ingame_laps_address_other, &number_of_laps, sizeof(number_of_laps), nullptr);
-        }
-        else {
-            do3 = true;
-            do4 = true;
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    if (do1 && do2 && do3 && do4) {
+    if (do1 && do2) {
         std::cout << "SUCCESS" << std::endl;
         *start_loading_phase = false;
         *show_popup_success = true;
@@ -491,11 +475,7 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
         ImGui::Dummy(ImVec2(0, 20));
 
         // MANUAL SELECT TRACK
-
-        ImGui::Text("Select Track");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(-FLT_MIN);
-        if (ImGui::BeginCombo("##SelectTrack", track_name_selected, 0))
+        if (ImGui::BeginCombo("Select Track##SelectTrack", track_name_selected, 0))
         {
 
             if (ImGui::IsWindowAppearing())
@@ -522,29 +502,11 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
             }
             ImGui::EndCombo();
         }
-
-        //ImGui::SameLine();
-        ImGui::Text("Select Laps ");
         ImGui::SameLine();
-        ImGui::SetNextItemWidth(-FLT_MIN);
-        ImGui::SliderInt("##SelectLaps", &number_of_laps, 0, 200, "%d", 0);
-        //ImGui::SameLine();
-        //ImGui::PushItemFlag(ImGuiItemFlags_Disabled, show_button_loading_icon_laps);
-        //if (ImGui::Button(show_button_loading_icon_laps ? "Working...##Laps" : "Set##Laps", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-        //    if (attached == 1) {
-        //        std::jthread(SelectLapsAndAssignVariable, &show_button_loading_icon_laps, &show_memory_write_success_popup, &show_memory_write_fail_popup).detach();
-        //    }
-        //    else {
-        //        show_cant_use_popup = true;
-        //    }
-        //}
-
-        //ImGui::PopItemFlag();
-
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, show_button_loading_icon);
-        if (ImGui::Button(show_button_loading_icon ? "Working...##Track" : "Set##Track", ImVec2(ImGui::GetContentRegionAvail().x, 30))) {
+        if (ImGui::Button(show_button_loading_icon ? "Working...##Track" : "Set##Track", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
             if (attached == 1) {
-                std::jthread(SelectTrackAndLapsAndAssignValue, &show_button_loading_icon, &show_memory_write_success_popup, &show_memory_write_fail_popup).detach();
+                std::jthread(SelectTrackAndAssignValue, &show_button_loading_icon, &show_memory_write_success_popup, &show_memory_write_fail_popup).detach();
             }
             else {
                 show_cant_use_popup = true;
