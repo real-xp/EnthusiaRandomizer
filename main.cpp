@@ -13,9 +13,11 @@
 #include "ImGUI/imgui_impl_win32.h"
 #include "ImGUI/imgui_impl_dx11.h"
 
+#include "ProcAttach/variables.h"
+
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
-
+    
 static ID3D11Device* g_pd3dDevice = nullptr;
 static ID3D11DeviceContext* g_pd3dDeviceContext = nullptr;
 static IDXGISwapChain* g_pSwapChain = nullptr;
@@ -29,160 +31,19 @@ static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 // PROCESS ATTACH FUNCTIONS
 const std::wstring PCSX2_PROC_NAME = L"pcsx2-qt.exe";
-const char* TRACK_NAMES[64] = {
-    "AUTUMN HILL FORWARD",
-    "AUTUMN MOUNTAIN FORWARD",
-    "VICTORIA GARDEN FORWARD",
-    "VICTORIA ROAD FORWARD",
-    "ROUTE de la SEINE FORWARD",
-    "BURGENSCHLUCHT FORWARD",
-    "WINTERTRAUM FORWARD",
-    "MARCO STRADA WET FORWARD",
-    "MARCO STRADA FORWARD",
-    "TSUKUBA FORWARD",
-    "TSUKUBA NIGHT FORWARD",
-    "TSUKUBA WET FORWARD",
-    "NORDSCHLEIFE FORWARD",
-    "SAN FRANCHISCO FORWARD",
-    "LOWENSEERING FORWARD",
-    "REV CITY FORWARD",
-    "SPEEDIAPOLIS RING",
-    "MYSTIC CAVEWAY FORWARD",
-    "EDGE OF THE ROAD FORWARD",
-    "DRAGON RANGE UPHILL",
-    "AIRPORT SQUARE",
-    "OCEAN BRIDGE TA",
-    "OCEAN BRIDGE RAIN TA",
-    "MIRAGE #1",
-    "MIRAGE #2",
-    "MIRAGE #3",
-    "MIRAGE #4",
-    "MIRAGE #5",
-    "MIRAGE #6",
-    "MIRAGE #7",
-    "MIRAGE #8",
-    "MIRAGE #9",
-    "MIRAGE #10",
-    "MIRAGE #11",
-    "MIRAGE #12",
-    "MIRAGE #13",
-    "MIRAGE #14",
-    "MIRAGE #15",
-    "MIRAGE #16",
-    "COSMIC EGGWAY FORWARD",
-    "COSMIC WINDING FORWARD",
-    "WILD WEST ENDURO FORWARD",
-    "AUTUMN HILL REVERSE",
-    "AUTUMN MOUNTAIN REVERSE",
-    "VICTORIA GARDEN REVERSE",
-    "VICTORIA ROAD REVERSE",
-    "ROUTE de la SEINE REVERSE",
-    "BURGENSCHLUCHT REVERSE",
-    "WINTERTRAUM REVERSE",
-    "MARCO STRADA WET REVERSE",
-    "MARCO STRADA REVERSE",
-    "TSUKUBA REVERSE",
-    "TSUKUBA NIGHT REVERSE",
-    "TSUKUBA WET REVERSE",
-    "NORDSCHLEIFE REVERSE",
-    "SAN FRANCHISCO REVERSE",
-    "LOWENSEERING REVERSE",
-    "REV CITY REVERSE",
-    "MYSTIC CAVEWAY REVERSE",
-    "EDGE OF THE ROAD REVERSE",
-    "DRAGON RANGE DOWNHILL",
-    "COSMIC EGGWAY REVERSE",
-    "COSMIC WINDING REVERSE",
-    "WILD WEST ENDURO REVERSE (NO LIGHTING)",
-};
 
-const uint8_t TRACK_ID[64] = {
-    1,   // AUTUMN HILL FORWARD
-    2,   // AUTUMN MOUNTAIN FORWARD
-    3,   // VICTORIA GARDEN FORWARD
-    4,   // VICTORIA ROAD FORWARD
-    5,   // ROUTE de la SEINE FORWARD
-    7,   // BURGENSCHLUCHT FORWARD
-    8,   // WINTERTRAUM FORWARD
-    10,  // MARCO STRADA WET FORWARD
-    11,  // MARCO STRADA FORWARD
-    12,  // TSUKUBA FORWARD
-    13,  // TSUKUBA NIGHT FORWARD
-    14,  // TSUKUBA WET FORWARD
-    15,  // NORDSCHLEIFE FORWARD
-    16,  // SAN FRANCHISCO FORWARD
-    17,  // LOWENSEERING FORWARD
-    18,  // REV CITY FORWARD
-    20,  // SPEEDIAPOLIS RING
-    21,  // MYSTIC CAVEWAY FORWARD
-    22,  // EDGE OF THE ROAD FORWARD
-    23,  // DRAGON RANGE UPHILL
-    26,  // AIRPORT SQUARE
-    28,  // OCEAN BRIDGE TA
-    29,  // OCEAN BRIDGE RAIN TA
-    30,  // MIRAGE #1
-    31,  // MIRAGE #2
-    32,  // MIRAGE #3
-    33,  // MIRAGE #4
-    34,  // MIRAGE #5
-    35,  // MIRAGE #6
-    36,  // MIRAGE #7
-    37,  // MIRAGE #8
-    38,  // MIRAGE #9
-    39,  // MIRAGE #10
-    40,  // MIRAGE #11
-    41,  // MIRAGE #12
-    42,  // MIRAGE #13
-    43,  // MIRAGE #14
-    44,  // MIRAGE #15
-    45,  // MIRAGE #16
-    46,  // COSMIC EGGWAY FORWARD
-    47,  // COSMIC WINDING FORWARD
-    48,  // WILD WEST ENDURO FORWARD
-    201, // AUTUMN HILL REVERSE
-    202, // AUTUMN MOUNTAIN REVERSE
-    203, // VICTORIA GARDEN REVERSE
-    204, // VICTORIA ROAD REVERSE
-    205, // ROUTE de la SEINE REVERSE
-    207, // BURGENSCHLUCHT REVERSE
-    208, // WINTERTRAUM REVERSE
-    210, // MARCO STRADA WET REVERSE
-    211, // MARCO STRADA REVERSE
-    212, // TSUKUBA REVERSE
-    213, // TSUKUBA NIGHT REVERSE
-    214, // TSUKUBA WET REVERSE
-    215, // NORDSCHLEIFE REVERSE
-    216, // SAN FRANCHISCO REVERSE
-    217, // LOWENSEERING REVERSE
-    218, // REV CITY REVERSE
-    221, // MYSTIC CAVEWAY REVERSE
-    222, // EDGE OF THE ROAD REVERSE
-    223, // DRAGON RANGE DOWNHILL
-    246, // COSMIC EGGWAY REVERSE
-    247, // COSMIC WINDING REVERSE
-    248, // WILD WEST ENDURO REVERSE (NO LIGHTING)
-};
-
-static const int TRACK_COUNT = IM_COUNTOF(TRACK_NAMES);
+static const int TRACK_COUNT = IM_COUNTOF(RandomizerVariables::TRACK_NAMES);
 static int selected_track_index = 0;
 static int number_of_laps = 1;
 static ImGuiTextFilter track_filter;
-
-// ADDRESSES FOR DIFFERENT FUNCTIONS
-const int TRACK_ADDRESS_EL = 0x01ab7c44;
-const int TRACK_ADDRESS_OTHER = 0x01af7be4;
-
-const int LAPS_ADDRESS_EL = 0x01ab7c50;
 
 // PROCATTACH BEGINS HERE
 
 uintptr_t eeMemBase = 0;
 HANDLE hProc;
 
-
 static DWORD GetProcIDByName(const std::wstring procName) {
     DWORD prodID = 0; // init proc id
-
 
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0); // snapshot of current processes open
 
@@ -209,14 +70,14 @@ static void SelectTrackAndLapsAndAssignValue(bool* start_loading_phase, bool* sh
     uint8_t number_of_laps_interal = (uint8_t) number_of_laps;
     ULONGLONG start_time = GetTickCount64();
 
-    uintptr_t ingame_track_address_el = eeMemBase + TRACK_ADDRESS_EL;
-    uintptr_t ingame_track_address_other = eeMemBase + TRACK_ADDRESS_OTHER;
-    uintptr_t ingame_laps_address_el = eeMemBase + LAPS_ADDRESS_EL;
+    uintptr_t ingame_track_address_el = eeMemBase + RandomizerVariables::TRACK_ADDRESS_EL;
+    uintptr_t ingame_track_address_other = eeMemBase + RandomizerVariables::TRACK_ADDRESS_OTHER;
+    uintptr_t ingame_laps_address_el = eeMemBase + RandomizerVariables::LAPS_ADDRESS_EL;
 
     while (GetTickCount64() - start_time < 30000) {
 
-        do1 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_el, &TRACK_ID[selected_track_index], sizeof(TRACK_ID[selected_track_index]), nullptr);
-        do2 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_other, &TRACK_ID[selected_track_index], sizeof(TRACK_ID[selected_track_index]), nullptr);
+        do1 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_el, &RandomizerVariables::TRACK_ID[selected_track_index], sizeof(RandomizerVariables::TRACK_ID[selected_track_index]), nullptr);
+        do2 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_other, &RandomizerVariables::TRACK_ID[selected_track_index], sizeof(RandomizerVariables::TRACK_ID[selected_track_index]), nullptr);
 
         if (number_of_laps_interal != 0) {
             do3 = WriteProcessMemory(hProc, (LPVOID)ingame_laps_address_el, &number_of_laps_interal, sizeof(number_of_laps_interal), nullptr);
@@ -244,14 +105,13 @@ static void RandomizeAndSelectTrackAndAssignValue(bool* start_loading_phase, boo
     bool do1 = false;
     bool do2 = false;
 
-    uintptr_t ingame_track_address_el = eeMemBase + TRACK_ADDRESS_EL;
-    uintptr_t ingame_track_address_other = eeMemBase + TRACK_ADDRESS_OTHER;
+    uintptr_t ingame_track_address_el = eeMemBase + RandomizerVariables::TRACK_ADDRESS_EL;
+    uintptr_t ingame_track_address_other = eeMemBase + RandomizerVariables::TRACK_ADDRESS_OTHER;
 
     uint8_t rand_track_id_val = (uint8_t) 1; // fallback value
 
     for (size_t i = 0; i < 6; i++) // basically so mirage occurs less in 6 tries
     {
-        std::srand((int)std::time(NULL));
         rand_track_id_val = (uint8_t)std::rand() % 64;
 
         if (!(rand_track_id_val >= 30 && rand_track_id_val <= 46)) {
@@ -263,8 +123,8 @@ static void RandomizeAndSelectTrackAndAssignValue(bool* start_loading_phase, boo
 
     while (GetTickCount64() - start_time < 30000) {
 
-        do1 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_el, &rand_track_id_val, sizeof(rand_track_id_val), nullptr);
-        do2 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_other, &rand_track_id_val, sizeof(rand_track_id_val), nullptr);
+        do1 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_el, &RandomizerVariables::TRACK_ID[rand_track_id_val], sizeof(RandomizerVariables::TRACK_ID[rand_track_id_val]), nullptr);
+        do2 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_other, &RandomizerVariables::TRACK_ID[rand_track_id_val], sizeof(RandomizerVariables::TRACK_ID[rand_track_id_val]), nullptr);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
@@ -278,6 +138,20 @@ static void RandomizeAndSelectTrackAndAssignValue(bool* start_loading_phase, boo
         *start_loading_phase = false;
         *show_popup_fail = true;
     }
+}
+
+static void InstantWinFunction() {
+    uintptr_t ingame_instantwin_address_el = eeMemBase + RandomizerVariables::INSTANT_WIN_EL;
+    uint8_t instant_win_value = (uint8_t) 4;
+
+    WriteProcessMemory(hProc, (LPVOID)ingame_instantwin_address_el, &instant_win_value, sizeof(instant_win_value), nullptr);
+}
+
+static void ChangeDriverMode(uint8_t driver_mode) {
+    uintptr_t ingame_driver_mode_address_el = eeMemBase + RandomizerVariables::DRIVER_MODE_EL;
+    uint8_t mode_value = (uint8_t)driver_mode;
+
+    WriteProcessMemory(hProc, (LPVOID)ingame_driver_mode_address_el, &mode_value, sizeof(mode_value), nullptr);
 }
 
 static int ProcAttach() {
@@ -402,13 +276,15 @@ static void ToggleImGuiTheme(bool* is_dark_mode) {
 
 int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 {
+    std::srand((int)std::time(NULL)); // set random seed
+
     WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L,
                       hInstance, nullptr, nullptr, nullptr, nullptr,
                       _T("ImGuiBase"), nullptr };
     ::RegisterClassEx(&wc);
 
     HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("Enthusia Randomizer"),
-        WS_OVERLAPPEDWINDOW, 20, 20, 800, 360, // x, y, size_x, size_y
+        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, 20, 20, 800, 360, // x, y, size_x, size_y
         nullptr, nullptr, wc.hInstance, nullptr);
 
     if (!CreateDeviceD3D(hwnd))
@@ -463,7 +339,7 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(io.DisplaySize);
 
-        const char* track_name_selected = TRACK_NAMES[selected_track_index];
+        const char* track_name_selected = RandomizerVariables::TRACK_NAMES[selected_track_index];
         ImGui::Begin("Enthusia Randomizer", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar);
 
         if (ImGui::BeginMenuBar())
@@ -474,18 +350,11 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
                     attached = ProcAttach();
                     show_attached_popup = true;
                 }
-                if (ImGui::MenuItem("Toggle Theme")) {
-                    ToggleImGuiTheme(&light_mode);
-                }
-                if (ImGui::MenuItem("GitHub")) {
-                    ShellExecute(0, 0, L"https://github.com/real-xp/", 0, 0, SW_SHOW);
-                }
-                if (ImGui::MenuItem("Exit")) {
-                    exit(0);
-                }
+                if (ImGui::MenuItem("Toggle Theme")) ToggleImGuiTheme(&light_mode);
+                if (ImGui::MenuItem("GitHub")) ShellExecute(0, 0, L"https://github.com/real-xp/", 0, 0, SW_SHOW);
+                if (ImGui::MenuItem("Exit")) exit(0);
                 ImGui::EndMenu();
             }
-
             ImGui::EndMenuBar();
         }
         
@@ -505,28 +374,23 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
         ImGui::SetNextItemWidth(-FLT_MIN);
         if (ImGui::BeginCombo("##SelectTrack", track_name_selected, 0))
         {
-
             if (ImGui::IsWindowAppearing())
             {
                 ImGui::SetKeyboardFocusHere();
                 track_filter.Clear();
             }
-
             ImGui::SetNextItemShortcut(ImGuiMod_Ctrl | ImGuiKey_F);
             track_filter.Draw("##Filter", -FLT_MIN);
-
             for (int i = 0; i < TRACK_COUNT; i++)
             {
-                if (!track_filter.PassFilter(TRACK_NAMES[i]))
+                if (!track_filter.PassFilter(RandomizerVariables::TRACK_NAMES[i]))
                     continue;
 
                 const bool isSelected = (selected_track_index == i);
-                if (ImGui::Selectable(TRACK_NAMES[i], isSelected))
-                    selected_track_index = i;
+                if (ImGui::Selectable(RandomizerVariables::TRACK_NAMES[i], isSelected)) selected_track_index = i;
 
                 // Keep selected item visible when opening
-                if (isSelected)
-                    ImGui::SetItemDefaultFocus();
+                if (isSelected) ImGui::SetItemDefaultFocus();
             }
             ImGui::EndCombo();
         }
@@ -538,39 +402,40 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
         ImGui::Dummy(ImVec2(0, 10));
 
         if (ImGui::Button(show_button_loading_icon ? "Working...##Track" : "Set Track And Laps##Track", ImVec2(ImGui::GetContentRegionAvail().x, 25))) {
-            if (attached == 1) {
+            if (attached == 1)
                 std::jthread(SelectTrackAndLapsAndAssignValue, &show_button_loading_icon, &show_memory_write_success_popup, &show_memory_write_fail_popup).detach();
-            }
-            else {
+            else
                 show_cant_use_popup = true;
-            }
         }
 
         ShowMemorySetPopup(&show_memory_write_success_popup, &show_memory_write_fail_popup);
         ShowNoAttachProcPopup(&show_cant_use_popup);
 
-        ImGui::Dummy(ImVec2(0, 9));
-
-
-        ImGui::Button("Instant Win##InstantWin", ImVec2(io.DisplaySize.x / 4, 25));
-        ImGui::SameLine();
-        ImGui::Button("Debug Car##DebugCar", ImVec2(io.DisplaySize.x / 4, 25));
-        ImGui::SameLine();
-        ImGui::Button("AIRS##AIRS", ImVec2(io.DisplaySize.x / 4, 25));
-        ImGui::SameLine();
-        ImGui::Button("Player Car##PlayerCar", ImVec2(ImGui::GetContentRegionAvail().x, 25));
-
-        ImGui::Dummy(ImVec2(0, 9));
-        if (ImGui::Button("Randomize Track##TrackRandom", ImVec2(ImGui::GetContentRegionAvail().x, 50))) {
-            if (attached == 1) {
-                std::jthread(RandomizeAndSelectTrackAndAssignValue, &show_button_loading_icon, &show_memory_write_success_popup, &show_memory_write_fail_popup).detach();
-            }
-            else {
-                show_cant_use_popup = true;
-            }
-        }
         ImGui::PopItemFlag();
 
+
+        ImGui::Dummy(ImVec2(0, 9));
+
+
+        if (ImGui::Button("Instant Win##InstantWin", ImVec2(io.DisplaySize.x / 4, 25))) { if (attached == 1) InstantWinFunction(); else show_cant_use_popup = true;}
+        ImGui::SameLine();
+        if (ImGui::Button("Debug Car##DebugCar", ImVec2(io.DisplaySize.x / 4, 25))) { if (attached == 1) ChangeDriverMode(6); else show_cant_use_popup = true; }
+        ImGui::SameLine();
+        if (ImGui::Button("AIRS##AIRS", ImVec2(io.DisplaySize.x / 4, 25))) { if (attached == 1) ChangeDriverMode(3); else show_cant_use_popup = true;}
+        ImGui::SameLine();
+        if (ImGui::Button("Player Car##PlayerCar", ImVec2(ImGui::GetContentRegionAvail().x, 25))) { if (attached == 1) ChangeDriverMode(5); else show_cant_use_popup = true;}
+
+        ImGui::Dummy(ImVec2(0, 9));
+
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, show_button_loading_icon);
+
+        if (ImGui::Button("Randomize Track##TrackRandom", ImVec2(ImGui::GetContentRegionAvail().x, 50))) {
+            if (attached == 1)
+                std::jthread(RandomizeAndSelectTrackAndAssignValue, &show_button_loading_icon, &show_memory_write_success_popup, &show_memory_write_fail_popup).detach();
+            else
+                show_cant_use_popup = true;
+        }
+        ImGui::PopItemFlag();
 
         ImGui::End();
         ImGui::Render();
