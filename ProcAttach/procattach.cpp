@@ -61,14 +61,12 @@ void ProcAttachSpace::ProcAttachClass::SelectTrackAndLapsAndAssignValue(int numb
             do3 = true;
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     if (do1 && do2 && do3) {
-        std::cout << "SUCCESS" << std::endl;
         *show_popup_success = true;
     }
     else {
-        std::cout << "FAILURE" << std::endl;
         *show_popup_fail = true;
     }
     *start_loading_phase = false;
@@ -104,14 +102,12 @@ void ProcAttachSpace::ProcAttachClass::RandomizeAndSelectTrackAndAssignValue(std
         do1 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_el, &RandomizerVariables::TRACK_ID[rand_track_id_val], sizeof(RandomizerVariables::TRACK_ID[rand_track_id_val]), nullptr);
         do2 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_other, &RandomizerVariables::TRACK_ID[rand_track_id_val], sizeof(RandomizerVariables::TRACK_ID[rand_track_id_val]), nullptr);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     if (do1 && do2) {
-        std::cout << "SUCCESS" << std::endl;
         *show_popup_success = true;
     }
     else {
-        std::cout << "FAILURE" << std::endl;
         *show_popup_fail = true;
     }
     *start_loading_phase = false;
@@ -138,11 +134,8 @@ int ProcAttachSpace::ProcAttachClass::ProcAttach() {
     DWORD procID = GetProcIDByName(PCSX2_PROC_NAME); // gets procID from const str
 
     if (!procID) { // checks if empty
-        std::cout << "PCSX2 PROCESS WAS NOT FOUND" << std::endl;
         return -1;
     }
-
-    std::cout << "PCSX2 WAS FOUND" << std::endl;
 
     hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, procID); // open process with all perms
     HMODULE hMods[1024]; // array for modules that will come with PCSX2 process
@@ -158,7 +151,6 @@ int ProcAttachSpace::ProcAttachClass::ProcAttach() {
     HMODULE pcsx2LocalCopy = LoadLibraryExW(procPath, NULL, DONT_RESOLVE_DLL_REFERENCES); // makes local copy of .exe to work on
 
     if (!pcsx2LocalCopy) {
-        std::cout << "LOCAL COPY COULD NOT BE MADE " << GetLastError() << std::endl;
         return -1;
     }
 

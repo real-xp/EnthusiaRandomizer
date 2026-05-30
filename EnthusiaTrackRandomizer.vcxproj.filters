@@ -77,8 +77,30 @@
     <ClInclude Include="ProcAttach\procattach.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Assets\font\OFL.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\github_images\EnthusiaPic1.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Assets\icon\icon.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Assets\github_images\dark.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Assets\github_images\light.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

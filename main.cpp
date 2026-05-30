@@ -13,6 +13,7 @@
 #include "ProcAttach/variables.h"
 #include "ProcAttach/procattach.h"
 #include "Assets/font/rubik-font.h"
+#include "resource.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -33,29 +34,14 @@ static int selected_track_index = 0;
 static int number_of_laps = 1;
 static ImGuiTextFilter track_filter;
 
-static void ShowAttachPopup(bool* show_attached_popup, int attached) {
-    if (*show_attached_popup && attached == 1) {
-        ImGui::OpenPopup("Successfully Attached");
-        *show_attached_popup = false;
-    }
-    if (*show_attached_popup && attached == -1) {
-        ImGui::OpenPopup("Could Not Attach");
-        *show_attached_popup = false;
+static void ShowWorkingPopup(std::atomic_bool* show_working_popup) {
+    if (*show_working_popup) {
+        ImGui::OpenPopup("Working");
+        *show_working_popup = false;
     }
 
-    if (ImGui::BeginPopupModal("Successfully Attached", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
-        ImGui::Text("Successfully attached to PCSX2");
-        if (ImGui::Button("Close")) {
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-
-    if (ImGui::BeginPopupModal("Could Not Attach", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
-        ImGui::Text("Could not attach to PCSX2. Make sure it is running.");
-        if (ImGui::Button("Close")) {
-            ImGui::CloseCurrentPopup();
-        }
+    if (ImGui::BeginPopupModal("Working", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+        ImGui::Text("PCSX2 Successfully Attached.\nThe memory is being edited. In this 30 second window, please open a race and join it.\nUsing Fast Forward on emulator might break things.\nPlease note that this is not always successful. You may enounter\n\t- Track Minimap loads but track does not\n\t- Game infinitely loads\n\t- PCSX2 Crashes\nDO NOT CLOSE PCSX2 OR THIS PROGRAM WHILE THIS PROCESS IS ON.");
         ImGui::EndPopup();
     }
 }
@@ -66,7 +52,7 @@ static void ShowNoAttachProcPopup(std::atomic_bool* show_cant_use_popup) {
         *show_cant_use_popup = false;
     }
     if (ImGui::BeginPopupModal("Cannot Set", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
-        ImGui::Text("Cannot set property. PCSX2 has not been attached\nPlease attach PCSX2 by going to App > Attach To PCSX2");
+        ImGui::Text("Cannot set value. PCSX2 has not been attached\nPlease make sure PCSX2 is open.");
         if (ImGui::Button("Close")) {
             ImGui::CloseCurrentPopup();
         }
@@ -109,8 +95,9 @@ static void ToggleImGuiTheme(bool* is_dark_mode) {
 
 int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 {
-    std::srand((int)std::time(NULL)); // set random seed
     ProcAttachSpace::ProcAttachClass ProcessAttach;
+
+    HICON hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON1));
 
     WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L,
                       hInstance, nullptr, nullptr, nullptr, nullptr,
@@ -127,6 +114,9 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
         ::UnregisterClass(wc.lpszClassName, wc.hInstance);
         return 1;
     }
+
+    SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+    SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
 
     ::ShowWindow(hwnd, SW_SHOWDEFAULT);
     ::UpdateWindow(hwnd);
@@ -151,10 +141,8 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 
     bool done = false;
     bool light_mode = false;
-    int attached = 0;
     bool show_attached_popup = false;
     std::atomic_bool show_button_loading_icon = false;
-    std::atomic_bool show_button_loading_icon_randomzie = false;
     std::atomic_bool show_memory_write_success_popup = false;
     std::atomic_bool show_memory_write_fail_popup = false;
     std::atomic_bool show_cant_use_popup = false;
@@ -186,10 +174,6 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
         {
             if (ImGui::BeginMenu("App"))
             {
-                if (ImGui::MenuItem("Attach To PCSX2")) {
-                    attached = ProcessAttach.ProcAttach();
-                    show_attached_popup = true;
-                }
                 if (ImGui::MenuItem("Toggle Theme")) ToggleImGuiTheme(&light_mode);
                 if (ImGui::MenuItem("Made By real-xp")) ShellExecute(0, 0, L"https://github.com/real-xp/", 0, 0, SW_SHOW);
                 if (ImGui::MenuItem("Exit")) exit(0);
@@ -198,10 +182,8 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
             if (ImGui::MenuItem("Help")) ShellExecute(0, 0, L"https://github.com/real-xp/EnthusiaTrackRandomizer/blob/master/README.md", 0, 0, SW_SHOW);
             ImGui::EndMenuBar();
         }
-        
-        ShowAttachPopup(&show_attached_popup, attached);
 
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, show_button_loading_icon || show_button_loading_icon_randomzie);
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, show_button_loading_icon);
         ImGui::Dummy(ImVec2(0, 20));
         ImGui::PushFont(NULL, 39);
         ImGui::Text("Enthusia Randomizer", ImGui::GetFontSize());
@@ -242,12 +224,13 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 
         ImGui::Dummy(ImVec2(0, 8));
 
-        if (ImGui::Button(show_button_loading_icon ? "Working...##Track" : "Set Track And Laps##Track", ImVec2(ImGui::GetContentRegionAvail().x, 25))) {
-            if (attached == 1)
+        if (ImGui::Button("Set Track And Laps##Track", ImVec2(ImGui::GetContentRegionAvail().x, 25))) {
+            if (ProcessAttach.ProcAttach() == 1)
                 std::jthread(ProcessAttach.SelectTrackAndLapsAndAssignValue, number_of_laps, selected_track_index, &show_button_loading_icon, &show_memory_write_success_popup, &show_memory_write_fail_popup).detach();
             else
                 show_cant_use_popup = true;
         }
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Sets the current chosen parameters of Track and Laps.\nSetting 0 Laps makes it so the game uses default amount of laps for that event.");
 
         ShowMemorySetPopup(&show_memory_write_success_popup, &show_memory_write_fail_popup);
         ShowNoAttachProcPopup(&show_cant_use_popup);
@@ -258,27 +241,33 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
         ImGui::Dummy(ImVec2(0, 8));
 
 
-        if (ImGui::Button("Instant Win##InstantWin", ImVec2(io.DisplaySize.x / 4, 25))) { if (attached == 1) ProcessAttach.InstantWinFunction(); else show_cant_use_popup = true;}
+        if (ImGui::Button("Instant Win##InstantWin", ImVec2(io.DisplaySize.x / 4, 25))) { if (ProcessAttach.ProcAttach() == 1) ProcessAttach.InstantWinFunction(); else show_cant_use_popup = true;}
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Instantly finishes the event and wins. Useful if you really get tired of a long race, or if you want to cheat smh.");
         ImGui::SameLine();
-        if (ImGui::Button("Debug Car##DebugCar", ImVec2(io.DisplaySize.x / 4, 25))) { if (attached == 1) ProcessAttach.ChangeDriverMode(6); else show_cant_use_popup = true; }
+        if (ImGui::Button("Debug Car##DebugCar", ImVec2(io.DisplaySize.x / 4, 25))) { if (ProcessAttach.ProcAttach() == 1) ProcessAttach.ChangeDriverMode(6); else show_cant_use_popup = true; }
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Enables Debug Car. Controls-\nRight Stick for movement\nLeft Stick for rotation\nDPad for step movement\nHold L2 and move to move faster");
         ImGui::SameLine();
-        if (ImGui::Button("AIRS##AIRS", ImVec2(io.DisplaySize.x / 4, 25))) { if (attached == 1) ProcessAttach.ChangeDriverMode(3); else show_cant_use_popup = true;}
+        if (ImGui::Button("AIRS##AIRS", ImVec2(io.DisplaySize.x / 4, 25))) { if (ProcessAttach.ProcAttach() == 1) ProcessAttach.ChangeDriverMode(3); else show_cant_use_popup = true;}
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("AIRS is the hardest AI in the game, but this one will drive the car for you instead. I like to call it AIRS, sounds cool.");
         ImGui::SameLine();
-        if (ImGui::Button("Player Car##PlayerCar", ImVec2(ImGui::GetContentRegionAvail().x, 25))) { if (attached == 1) ProcessAttach.ChangeDriverMode(5); else show_cant_use_popup = true;}
+        if (ImGui::Button("Player Car##PlayerCar", ImVec2(ImGui::GetContentRegionAvail().x, 25))) { if (ProcessAttach.ProcAttach() == 1) ProcessAttach.ChangeDriverMode(5); else show_cant_use_popup = true;}
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Gives back control to the player.");
 
         ImGui::Dummy(ImVec2(0, 8));
 
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, show_button_loading_icon || show_button_loading_icon_randomzie);
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, show_button_loading_icon);
 
         ImGui::PushFont(NULL, 26);
-        if (ImGui::Button(show_button_loading_icon_randomzie ? "WORKING...##TrackRandom" : "RANDOMIZE TRACK##TrackRandom", ImVec2(ImGui::GetContentRegionAvail().x, 50))) {
-            if (attached == 1)
-                std::jthread(ProcessAttach.RandomizeAndSelectTrackAndAssignValue, &show_button_loading_icon_randomzie, &show_memory_write_success_popup, &show_memory_write_fail_popup).detach();
+        if (ImGui::Button("RANDOMIZE TRACK##TrackRandom", ImVec2(ImGui::GetContentRegionAvail().x, 50))) {
+            if (ProcessAttach.ProcAttach() == 1)
+                std::jthread(ProcessAttach.RandomizeAndSelectTrackAndAssignValue, &show_button_loading_icon, &show_memory_write_success_popup, &show_memory_write_fail_popup).detach();
             else
                 show_cant_use_popup = true;
         }
         ImGui::PopFont();
         ImGui::PopItemFlag();
+
+        ShowWorkingPopup(&show_button_loading_icon);
 
         ImGui::End();   
         ImGui::Render();

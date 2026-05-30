@@ -152,9 +152,19 @@
     <ClInclude Include="ImGui\imstb_truetype.h" />
     <ClInclude Include="ProcAttach\procattach.h" />
     <ClInclude Include="ProcAttach\variables.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Assets\font\OFL.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\github_images\dark.png" />
+    <Image Include="Assets\github_images\EnthusiaPic1.png" />
+    <Image Include="Assets\github_images\light.png" />
+    <Image Include="Assets\icon\icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
