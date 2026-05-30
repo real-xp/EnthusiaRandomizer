@@ -29,11 +29,12 @@ static void CreateRenderTarget();
 static void CleanupRenderTarget();
 static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-static const int TRACK_COUNT = IM_COUNTOF(RandomizerVariables::TRACK_NAMES);
-static int selected_track_index = 0;
-static int number_of_laps = 1;
-static ImGuiTextFilter track_filter;
+static const int TRACK_COUNT = IM_COUNTOF(RandomizerVariables::TRACK_NAMES); // For the combo box in IMGUI
+static int selected_track_index = 0; // Track index from combobox
+static int number_of_laps = 1; // Lap number from slider
+static ImGuiTextFilter track_filter; // Filter for Track combobox
 
+// Popup showing when program is memory editing
 static void ShowWorkingPopup(std::atomic_bool* show_working_popup) {
     if (*show_working_popup) {
         ImGui::OpenPopup("Working");
@@ -46,6 +47,7 @@ static void ShowWorkingPopup(std::atomic_bool* show_working_popup) {
     }
 }
 
+// Popup to show failure in attachment to PCSX2
 static void ShowNoAttachProcPopup(std::atomic_bool* show_cant_use_popup) {
     if (*show_cant_use_popup) {
         ImGui::OpenPopup("Cannot Set");
@@ -60,6 +62,7 @@ static void ShowNoAttachProcPopup(std::atomic_bool* show_cant_use_popup) {
     }
 }
 
+// Popup to say memory setup was successful or failure
 static void ShowMemorySetPopup(std::atomic_bool* show_memory_write_success_popup, std::atomic_bool* show_memory_write_fail_popup) {
     if (*show_memory_write_success_popup) {
         ImGui::OpenPopup("Successful");
@@ -88,6 +91,7 @@ static void ShowMemorySetPopup(std::atomic_bool* show_memory_write_success_popup
     }
 }
 
+// Changes theme from Dark to Light
 static void ToggleImGuiTheme(bool* is_dark_mode) {
     *is_dark_mode ? ImGui::StyleColorsDark() : ImGui::StyleColorsLight();
     *is_dark_mode = !*is_dark_mode;
@@ -95,9 +99,9 @@ static void ToggleImGuiTheme(bool* is_dark_mode) {
 
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) // change to _tWinMain for non console, main for console
 {
-    ProcAttachSpace::ProcAttachClass ProcessAttach;
+    ProcAttachSpace::ProcAttachClass ProcessAttach; // Main instance init of ProcAttach class
 
-    HICON hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON1));
+    HICON hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON1)); // For the icon from resource.rc
 
     WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L,
                       hInstance, nullptr, nullptr, nullptr, nullptr,
@@ -115,8 +119,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) // change to
         return 1;
     }
 
-    SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-    SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+    SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon); // for icon big
+    SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon); // for icon small
 
     ::ShowWindow(hwnd, SW_SHOWDEFAULT);
     ::UpdateWindow(hwnd);
@@ -127,26 +131,26 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) // change to
     //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
 
     ImGuiStyle& style = ImGui::GetStyle();
-    style.FontSizeBase = 16.0f;
+    style.FontSizeBase = 16.0f; // base size
 
-    io.IniFilename = NULL;
-    io.Fonts->AddFontFromMemoryCompressedTTF(rubikfont_compressed_data, rubikfont_compressed_size);
+    io.IniFilename = NULL; // to disable config file generation
+    io.Fonts->AddFontFromMemoryCompressedTTF(rubikfont_compressed_data, rubikfont_compressed_size); // custom default font
 
-    ImGui::StyleColorsDark();
+    ImGui::StyleColorsDark(); // default theme
 
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
 
     // main IMGUI window here
 
-    bool done = false;
+    bool done = false; // for imgui loop
     bool light_mode = false;
     bool show_tooltips = true;
-    bool show_attached_popup = false;
-    std::atomic_bool show_button_loading_icon = false;
-    std::atomic_bool show_memory_write_success_popup = false;
-    std::atomic_bool show_memory_write_fail_popup = false;
-    std::atomic_bool show_cant_use_popup = false;
+    bool show_attached_popup = false; // show if attached
+    std::atomic_bool show_button_loading_icon = false; // for events related to button handling 
+    std::atomic_bool show_memory_write_success_popup = false; // same 
+    std::atomic_bool show_memory_write_fail_popup = false; // same
+    std::atomic_bool show_cant_use_popup = false; // same
 
     while (!done)
     {
@@ -166,9 +170,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) // change to
         ImGui::NewFrame();
 
         ImGui::SetNextWindowPos(ImVec2(0, 0));
-        ImGui::SetNextWindowSize(io.DisplaySize);
+        ImGui::SetNextWindowSize(io.DisplaySize); // max size imgui window to viewport
 
-        const char* track_name_selected = RandomizerVariables::TRACK_NAMES[selected_track_index];
+        const char* track_name_selected = RandomizerVariables::TRACK_NAMES[selected_track_index]; // for combobox preview text
         ImGui::Begin("Enthusia Randomizer", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar);
 
         if (ImGui::BeginMenuBar())
@@ -187,6 +191,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) // change to
             ImGui::EndMenuBar();
         }
 
+        // TITLE TEXT
+
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, show_button_loading_icon);
         ImGui::Dummy(ImVec2(0, 20));
         ImGui::PushFont(NULL, 39);
@@ -196,6 +202,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) // change to
 
         // MANUAL SELECT TRACK
 
+        // COMBO BOX
         ImGui::Text("Select Track");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(-FLT_MIN);
@@ -221,13 +228,16 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) // change to
             }
             ImGui::EndCombo();
         }
-        ImGui::Text("Select Laps ");
-        ImGui::SameLine();
+
+        // SLIDER FOR LAPS
+        ImGui::Text("Select Laps ");    
+        ImGui::SameLine();      
         ImGui::SetNextItemWidth(-FLT_MIN);
         ImGui::SliderInt("##SelectLaps", &number_of_laps, 0, 200, "%d", 0);
 
         ImGui::Dummy(ImVec2(0, 8));
 
+        // BUTTON TO SET TRACK AND LAPS
         if (ImGui::Button("Set Track And Laps##Track", ImVec2(ImGui::GetContentRegionAvail().x, 25))) {
             if (ProcessAttach.ProcAttach() == 1)
                 std::jthread(ProcessAttach.SelectTrackAndLapsAndAssignValue, number_of_laps, selected_track_index, &show_button_loading_icon, &show_memory_write_success_popup, &show_memory_write_fail_popup).detach();
@@ -244,7 +254,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) // change to
 
         ImGui::Dummy(ImVec2(0, 8));
 
-
+        // CHEAT BUTTONS
         if (ImGui::Button("Instant Win##InstantWin", ImVec2(io.DisplaySize.x / 4, 25))) { if (ProcessAttach.ProcAttach() == 1) ProcessAttach.InstantWinFunction(); else show_cant_use_popup = true;}
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && show_tooltips) ImGui::SetTooltip("Instantly finishes the event and wins. Useful if you really get tired of a long race, or if you want to cheat smh.");
         ImGui::SameLine();
@@ -261,6 +271,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) // change to
 
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, show_button_loading_icon);
 
+        // FULL RANDOMIZE BUTTON
         ImGui::PushFont(NULL, 26);
         if (ImGui::Button("RANDOMIZE TRACK##TrackRandom", ImVec2(ImGui::GetContentRegionAvail().x, 50))) {
             if (ProcessAttach.ProcAttach() == 1)
@@ -294,6 +305,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) // change to
 
     return 0;
 }
+
+// Other ImGUI + DX11 bloat
 
 static bool CreateDeviceD3D(HWND hWnd)
 {

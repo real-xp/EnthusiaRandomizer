@@ -37,17 +37,18 @@ DWORD ProcAttachSpace::ProcAttachClass::GetProcIDByName(const std::wstring procN
     return prodID;
 }
 
+// Custom track selection
 void ProcAttachSpace::ProcAttachClass::SelectTrackAndLapsAndAssignValue(int number_of_laps, int selected_track_index, std::atomic_bool* start_loading_phase, std::atomic_bool* show_popup_success, std::atomic_bool* show_popup_fail) {
     *start_loading_phase = true;
     bool do1 = false;
     bool do2 = false;
-    bool do3 = false;
+    bool do3 = false; // setting bools for valid checking
     uint8_t number_of_laps_interal = (uint8_t)number_of_laps;
-    ULONGLONG start_time = GetTickCount64();
+    ULONGLONG start_time = GetTickCount64(); // for 30 second timer
 
     uintptr_t ingame_track_address_el = eeMemBase + RandomizerVariables::TRACK_ADDRESS_EL;
     uintptr_t ingame_track_address_other = eeMemBase + RandomizerVariables::TRACK_ADDRESS_OTHER;
-    uintptr_t ingame_laps_address_el = eeMemBase + RandomizerVariables::LAPS_ADDRESS_EL;
+    uintptr_t ingame_laps_address_el = eeMemBase + RandomizerVariables::LAPS_ADDRESS_EL; // all addresses to be edited being normalised for editing
 
     while (GetTickCount64() - start_time < 30000) {
 
@@ -72,6 +73,7 @@ void ProcAttachSpace::ProcAttachClass::SelectTrackAndLapsAndAssignValue(int numb
     *start_loading_phase = false;
 }
 
+// For random track selection
 void ProcAttachSpace::ProcAttachClass::RandomizeAndSelectTrackAndAssignValue(std::atomic_bool* start_loading_phase, std::atomic_bool* show_popup_success, std::atomic_bool* show_popup_fail) {
     *start_loading_phase = true;
     bool do1 = false;
@@ -113,6 +115,7 @@ void ProcAttachSpace::ProcAttachClass::RandomizeAndSelectTrackAndAssignValue(std
     *start_loading_phase = false;
 }
 
+// For instant win
 void ProcAttachSpace::ProcAttachClass::InstantWinFunction() {
     uintptr_t ingame_instantwin_address_el = eeMemBase + RandomizerVariables::INSTANT_WIN_EL;
     uint8_t instant_win_value = (uint8_t)4;
@@ -120,6 +123,7 @@ void ProcAttachSpace::ProcAttachClass::InstantWinFunction() {
     WriteProcessMemory(hProc, (LPVOID)ingame_instantwin_address_el, &instant_win_value, sizeof(instant_win_value), nullptr);
 }
 
+// For driver mode change
 void ProcAttachSpace::ProcAttachClass::ChangeDriverMode(uint8_t driver_mode) {
     uintptr_t ingame_driver_mode_address_el = eeMemBase + RandomizerVariables::DRIVER_MODE_EL;
     uint8_t mode_value = (uint8_t)driver_mode;
@@ -127,6 +131,7 @@ void ProcAttachSpace::ProcAttachClass::ChangeDriverMode(uint8_t driver_mode) {
     WriteProcessMemory(hProc, (LPVOID)ingame_driver_mode_address_el, &mode_value, sizeof(mode_value), nullptr);
 }
 
+// Main initializer
 int ProcAttachSpace::ProcAttachClass::ProcAttach() {
 
     // ACTUALLY GETTING ALL PATH AND STUFF
