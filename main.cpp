@@ -93,7 +93,7 @@ static void ToggleImGuiTheme(bool* is_dark_mode) {
     *is_dark_mode = !*is_dark_mode;
 }
 
-int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
+int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) // change to _tWinMain for non console, main for console
 {
     ProcAttachSpace::ProcAttachClass ProcessAttach;
 
@@ -105,7 +105,7 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
     ::RegisterClassEx(&wc);
 
     HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("Enthusia Randomizer"),
-        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, 20, 20, 800, 360, // x, y, size_x, size_y
+        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, 20, 20, 800, 370, // x, y, size_x, size_y
         nullptr, nullptr, wc.hInstance, nullptr);
 
     if (!CreateDeviceD3D(hwnd))
