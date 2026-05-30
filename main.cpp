@@ -4,6 +4,7 @@
 #include <d3d11.h>
 #include <dxgi.h>
 #include <thread>
+#include <atomic>
 
 #include "ImGUI/imgui.h"
 #include "ImGUI/imgui_impl_win32.h"
@@ -59,7 +60,7 @@ static void ShowAttachPopup(bool* show_attached_popup, int attached) {
     }
 }
 
-static void ShowNoAttachProcPopup(bool* show_cant_use_popup) {
+static void ShowNoAttachProcPopup(std::atomic_bool* show_cant_use_popup) {
     if (*show_cant_use_popup) {
         ImGui::OpenPopup("Cannot Set");
         *show_cant_use_popup = false;
@@ -73,7 +74,7 @@ static void ShowNoAttachProcPopup(bool* show_cant_use_popup) {
     }
 }
 
-static void ShowMemorySetPopup(bool* show_memory_write_success_popup, bool* show_memory_write_fail_popup) {
+static void ShowMemorySetPopup(std::atomic_bool* show_memory_write_success_popup, std::atomic_bool* show_memory_write_fail_popup) {
     if (*show_memory_write_success_popup) {
         ImGui::OpenPopup("Successful");
         *show_memory_write_success_popup = false;
@@ -152,11 +153,11 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
     bool light_mode = false;
     int attached = 0;
     bool show_attached_popup = false;
-    bool show_button_loading_icon = false;
-    bool show_button_loading_icon_randomzie = false;
-    bool show_memory_write_success_popup = false;
-    bool show_memory_write_fail_popup = false;
-    bool show_cant_use_popup = false;
+    std::atomic_bool show_button_loading_icon = false;
+    std::atomic_bool show_button_loading_icon_randomzie = false;
+    std::atomic_bool show_memory_write_success_popup = false;
+    std::atomic_bool show_memory_write_fail_popup = false;
+    std::atomic_bool show_cant_use_popup = false;
 
     while (!done)
     {
@@ -190,10 +191,11 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
                     show_attached_popup = true;
                 }
                 if (ImGui::MenuItem("Toggle Theme")) ToggleImGuiTheme(&light_mode);
-                if (ImGui::MenuItem("GitHub")) ShellExecute(0, 0, L"https://github.com/real-xp/", 0, 0, SW_SHOW);
+                if (ImGui::MenuItem("Made By real-xp")) ShellExecute(0, 0, L"https://github.com/real-xp/", 0, 0, SW_SHOW);
                 if (ImGui::MenuItem("Exit")) exit(0);
                 ImGui::EndMenu();
             }
+            if (ImGui::MenuItem("Help")) ShellExecute(0, 0, L"https://github.com/real-xp/EnthusiaTrackRandomizer/blob/master/README.md", 0, 0, SW_SHOW);
             ImGui::EndMenuBar();
         }
         
@@ -278,10 +280,10 @@ int APIENTRY main(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
         ImGui::PopFont();
         ImGui::PopItemFlag();
 
-        ImGui::End();
+        ImGui::End();   
         ImGui::Render();
 
-        const float clear_color[4] = { 0.29f, 0.29f, 0.29f, 1.0f }; // DX11 Window Color
+        const float clear_color[4] = { 0.0f, 0.0f, 0.0f, 1.0f }; // DX11 Window Color
         g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
         g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, clear_color);
         ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());

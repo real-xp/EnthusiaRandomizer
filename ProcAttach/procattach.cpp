@@ -5,6 +5,9 @@
 #include <TlHelp32.h>
 #include "variables.h"
 #include "procattach.h"
+#include <random>
+#include <atomic>
+#include <string>
 
 // PROCESS ATTACH FUNCTIONS
 const std::wstring PCSX2_PROC_NAME = L"pcsx2-qt.exe";
@@ -34,7 +37,7 @@ DWORD ProcAttachSpace::ProcAttachClass::GetProcIDByName(const std::wstring procN
     return prodID;
 }
 
-void ProcAttachSpace::ProcAttachClass::SelectTrackAndLapsAndAssignValue(int number_of_laps, int selected_track_index, bool* start_loading_phase, bool* show_popup_success, bool* show_popup_fail) {
+void ProcAttachSpace::ProcAttachClass::SelectTrackAndLapsAndAssignValue(int number_of_laps, int selected_track_index, std::atomic_bool* start_loading_phase, std::atomic_bool* show_popup_success, std::atomic_bool* show_popup_fail) {
     *start_loading_phase = true;
     bool do1 = false;
     bool do2 = false;
@@ -58,7 +61,7 @@ void ProcAttachSpace::ProcAttachClass::SelectTrackAndLapsAndAssignValue(int numb
             do3 = true;
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
     if (do1 && do2 && do3) {
         std::cout << "SUCCESS" << std::endl;
@@ -71,21 +74,25 @@ void ProcAttachSpace::ProcAttachClass::SelectTrackAndLapsAndAssignValue(int numb
     *start_loading_phase = false;
 }
 
-void ProcAttachSpace::ProcAttachClass::RandomizeAndSelectTrackAndAssignValue(bool* start_loading_phase, bool* show_popup_success, bool* show_popup_fail) {
+void ProcAttachSpace::ProcAttachClass::RandomizeAndSelectTrackAndAssignValue(std::atomic_bool* start_loading_phase, std::atomic_bool* show_popup_success, std::atomic_bool* show_popup_fail) {
     *start_loading_phase = true;
     bool do1 = false;
     bool do2 = false;
+    
+    thread_local std::mt19937 rng_state(std::random_device{}()); // generates a thread safe mt19937 rng state object
 
     uintptr_t ingame_track_address_el = eeMemBase + RandomizerVariables::TRACK_ADDRESS_EL;
     uintptr_t ingame_track_address_other = eeMemBase + RandomizerVariables::TRACK_ADDRESS_OTHER;
+
+    std::uniform_int_distribution<int> distribution(0, 63); // creates a uniform integral distribution between 0 and 63 (for ID)
 
     uint8_t rand_track_id_val = (uint8_t)1; // fallback value
 
     for (size_t i = 0; i < 6; i++) // basically so mirage occurs less in 6 tries
     {
-        rand_track_id_val = (uint8_t)std::rand() % 64;
+        rand_track_id_val = static_cast<uint8_t>(distribution(rng_state));
 
-        if (!(rand_track_id_val >= 30 && rand_track_id_val <= 46)) {
+        if (!(rand_track_id_val >= 30 && rand_track_id_val <= 46) && rand_track_id_val!=63) {
             break;
         }
     }
@@ -97,7 +104,7 @@ void ProcAttachSpace::ProcAttachClass::RandomizeAndSelectTrackAndAssignValue(boo
         do1 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_el, &RandomizerVariables::TRACK_ID[rand_track_id_val], sizeof(RandomizerVariables::TRACK_ID[rand_track_id_val]), nullptr);
         do2 = WriteProcessMemory(hProc, (LPVOID)ingame_track_address_other, &RandomizerVariables::TRACK_ID[rand_track_id_val], sizeof(RandomizerVariables::TRACK_ID[rand_track_id_val]), nullptr);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
     if (do1 && do2) {
         std::cout << "SUCCESS" << std::endl;
