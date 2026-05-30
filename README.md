@@ -6,6 +6,24 @@ This was written in C++ using ImGui as the GUI library and windows API.
 ![Light Theme](Assets/github_images/light.png)
 ![Dark Theme](Assets/github_images/dark.png)
 
+# Features
+- Custom selection of tracks (64 total tracks)
+	- Wild West Enduro Reverse does not have lighting or textures
+	- Cosmic Winding Reverse is an unused track in the game
+	- There are a total of 16 different variations of Mirage Crossing
+- Custom amount of laps (upto 200)
+	- This can be used to make custom endurance races and even a 24 Hour race
+	- Setting to 0 Laps will result in game defaulting to number of laps of that particular event without modification
+- Some cheats like
+	- Instant Win : You win instantly
+	- Debug Car : Useful for free exploration to an extent
+	- AIRS : Basically B-Spec for Enthusia, AI drives for you
+	- Player Car : Gives back control to player
+- Randomize track to any of the 64 tracks
+- Help button to bring you to this page
+- A theme toggle for the app
+- A tooltip toggle for the app
+
 # Requirements
 - Windows (currently not supported on Linux or macOS)
 - DirectX (Required for GUI)

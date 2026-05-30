@@ -141,6 +141,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) // change to
 
     bool done = false;
     bool light_mode = false;
+    bool show_tooltips = true;
     bool show_attached_popup = false;
     std::atomic_bool show_button_loading_icon = false;
     std::atomic_bool show_memory_write_success_popup = false;
@@ -174,9 +175,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) // change to
         {
             if (ImGui::BeginMenu("App"))
             {
-                if (ImGui::MenuItem("Toggle Theme")) ToggleImGuiTheme(&light_mode);
+                if (ImGui::MenuItem(light_mode ? "Dark Theme" : "Light Theme")) ToggleImGuiTheme(&light_mode);
+                if (ImGui::MenuItem(show_tooltips ? "Disable Tooltips" : "Enable Tooltips")) show_tooltips = !show_tooltips;
+                ImGui::Separator();
                 if (ImGui::MenuItem("Made By real-xp")) ShellExecute(0, 0, L"https://github.com/real-xp/", 0, 0, SW_SHOW);
-                if (ImGui::MenuItem("Exit")) exit(0);
+                ImGui::Separator();
+                if (ImGui::MenuItem("Exit", "Alt+F4")) exit(0);
                 ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Help")) ShellExecute(0, 0, L"https://github.com/real-xp/EnthusiaTrackRandomizer/blob/master/README.md", 0, 0, SW_SHOW);
@@ -230,7 +234,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) // change to
             else
                 show_cant_use_popup = true;
         }
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Sets the current chosen parameters of Track and Laps.\nSetting 0 Laps makes it so the game uses default amount of laps for that event.");
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && show_tooltips) ImGui::SetTooltip("Sets the current chosen parameters of Track and Laps.\nSetting 0 Laps makes it so the game uses default amount of laps for that event.");
 
         ShowMemorySetPopup(&show_memory_write_success_popup, &show_memory_write_fail_popup);
         ShowNoAttachProcPopup(&show_cant_use_popup);
@@ -242,16 +246,16 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) // change to
 
 
         if (ImGui::Button("Instant Win##InstantWin", ImVec2(io.DisplaySize.x / 4, 25))) { if (ProcessAttach.ProcAttach() == 1) ProcessAttach.InstantWinFunction(); else show_cant_use_popup = true;}
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Instantly finishes the event and wins. Useful if you really get tired of a long race, or if you want to cheat smh.");
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && show_tooltips) ImGui::SetTooltip("Instantly finishes the event and wins. Useful if you really get tired of a long race, or if you want to cheat smh.");
         ImGui::SameLine();
         if (ImGui::Button("Debug Car##DebugCar", ImVec2(io.DisplaySize.x / 4, 25))) { if (ProcessAttach.ProcAttach() == 1) ProcessAttach.ChangeDriverMode(6); else show_cant_use_popup = true; }
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Enables Debug Car. Controls-\nRight Stick for movement\nLeft Stick for rotation\nDPad for step movement\nHold L2 and move to move faster");
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && show_tooltips) ImGui::SetTooltip("Enables Debug Car. Controls-\nRight Stick for movement\nLeft Stick for rotation\nDPad for step movement\nHold L2 and move to move faster");
         ImGui::SameLine();
         if (ImGui::Button("AIRS##AIRS", ImVec2(io.DisplaySize.x / 4, 25))) { if (ProcessAttach.ProcAttach() == 1) ProcessAttach.ChangeDriverMode(3); else show_cant_use_popup = true;}
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("AIRS is the hardest AI in the game, but this one will drive the car for you instead. I like to call it AIRS, sounds cool.");
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && show_tooltips) ImGui::SetTooltip("AIRS is the hardest AI in the game, but this one will drive the car for you instead. I like to call it AIRS, sounds cool.");
         ImGui::SameLine();
         if (ImGui::Button("Player Car##PlayerCar", ImVec2(ImGui::GetContentRegionAvail().x, 25))) { if (ProcessAttach.ProcAttach() == 1) ProcessAttach.ChangeDriverMode(5); else show_cant_use_popup = true;}
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Gives back control to the player.");
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && show_tooltips) ImGui::SetTooltip("Gives back control to the player.");
 
         ImGui::Dummy(ImVec2(0, 8));
 
