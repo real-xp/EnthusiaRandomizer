@@ -42,7 +42,7 @@ It is recommended you save state **BEFORE** setting the custom parameters or usi
 It is also recommended to **NOT** use fast forward when the 30 second window is open for loading into maps. This might lead to issues.
 
 # Method Of Working
-The program uses WinAPI to edit memory address of the track ID and number of laps externally. This requires the program to hook to your PCSX2 instance.
+The program uses WinAPI to edit memory value of the track ID and number of laps externally. This requires the program to hook to your PCSX2 instance.
 
 Because of these two reasons, this is only supported on Windows as of current.
 
