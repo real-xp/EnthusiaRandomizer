@@ -39,6 +39,12 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ProcAttach\procattach.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Assets\font\rubik-font.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImGui\imconfig.h">
@@ -68,5 +74,11 @@
     <ClInclude Include="ProcAttach\variables.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ProcAttach\procattach.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Assets\font\OFL.txt" />
   </ItemGroup>
 </Project>

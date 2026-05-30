@@ -2,7 +2,7 @@
 #include <iostream>
 
 namespace RandomizerVariables {
-    const char* TRACK_NAMES[64] = {
+    static const char* TRACK_NAMES[64] = {
     "AUTUMN HILL FORWARD",
     "AUTUMN MOUNTAIN FORWARD",
     "VICTORIA GARDEN FORWARD",
@@ -69,7 +69,7 @@ namespace RandomizerVariables {
     "WILD WEST ENDURO REVERSE (NO LIGHTING)",
     };
 
-    const uint8_t TRACK_ID[64] = {
+    static const uint8_t TRACK_ID[64] = {
         1,   // AUTUMN HILL FORWARD
         2,   // AUTUMN MOUNTAIN FORWARD
         3,   // VICTORIA GARDEN FORWARD
@@ -136,11 +136,11 @@ namespace RandomizerVariables {
         248, // WILD WEST ENDURO REVERSE (NO LIGHTING)
     };
 
-    const int TRACK_ADDRESS_EL = 0x01ab7c44;
-    const int TRACK_ADDRESS_OTHER = 0x01af7be4;
+    static const int TRACK_ADDRESS_EL = 0x01ab7c44;
+    static const int TRACK_ADDRESS_OTHER = 0x01af7be4;
 
-    const int LAPS_ADDRESS_EL = 0x01ab7c50;
+    static const int LAPS_ADDRESS_EL = 0x01ab7c50;
 
-    const int DRIVER_MODE_EL = 0x0173F0B4;
-    const int INSTANT_WIN_EL = 0x01740AA0;
+    static const int DRIVER_MODE_EL = 0x0173F0B4;
+    static const int INSTANT_WIN_EL = 0x01740AA0;
 };
