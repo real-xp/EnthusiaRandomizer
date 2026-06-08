@@ -24,6 +24,9 @@ This was written in C++ using ImGui as the GUI library and windows API.
 - A theme toggle for the app
 - A tooltip toggle for the app
 
+# Warning
+**Do not try to use this program to cheat in RetroAchievements Leaderboards or Hardcore or anything. Neither I nor my code is responsible for anything.**
+
 # Requirements
 - Windows (currently not supported on Linux or macOS)
 - DirectX (Required for GUI)
